@@ -6,7 +6,7 @@
 2. Create a feature branch:
    feature/<issue-name>
 3. Open Pull Request to merge into main.
-4. At least one teammate review required.
+4. At least one teammate review is required.
 5. CI must pass before merge.
 
 ## Branch Naming

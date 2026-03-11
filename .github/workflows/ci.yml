@@ -6,12 +6,15 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Check shell scripts
         run: |
+          sudo apt-get update
           sudo apt-get install -y shellcheck
-          find . -name "*.sh" -exec shellcheck {} \;
+          find . -name "*.sh" -exec shellcheck {} +
