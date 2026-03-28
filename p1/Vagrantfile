@@ -1,6 +1,8 @@
 Vagrant.configure("2") do |config|
 
-	config.vm.box = "debian/trixie64"
+	config.vm.box = "bento/debian-12"
+	config.vm.boot_timeout = 600
+	config.vm.communicator = "ssh"
 
 	config.vm.define "goncaloS" do |goncaloS|
 		goncaloS.vm.hostname = "GoncaloS"
@@ -8,14 +10,16 @@ Vagrant.configure("2") do |config|
 		goncaloS.vm.provider "virtualbox" do |vb|
 			vb.memory = "512"
 			vb.cpus = 1
+			vb.name = "p1_goncaloS"
 		end
 		goncaloS.vm.provision "shell", inline: <<-SHELL
 			apt-get update
-			apt-get install -y curl inotify-tools
+			apt-get install -y -q curl
 			curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
-			inotifywait -e create /var/lib/rancher/k3s/server/ | grep -q node-token
-			sudo cp /var/lib/rancher/k3s/server/node-token /vagrant/k3s-token
-			cp /usr/local/bin/k3s /usr/local/bin/kubectl
+			echo "K3S Server started, waiting for token..."
+			timeout 120 bash -c 'while [ ! -f /var/lib/rancher/k3s/server/node-token ]; do sleep 1; done'
+			cp /var/lib/rancher/k3s/server/node-token /vagrant/k3s-token
+			echo "Token copied to /vagrant/k3s-token"
 		SHELL
 	end
 
@@ -25,15 +29,17 @@ Vagrant.configure("2") do |config|
 		goncaloSW.vm.provider "virtualbox" do |vb|
 			vb.memory = "512"
 			vb.cpus = 1
+			vb.name = "p1_goncaloSW"
 		end
 		goncaloSW.vm.provision "shell", inline: <<-SHELL
 			apt-get update
-			apt-get install -y curl inotify-tools
-			inotifywait -e create /vagrant/ | grep -q k3s-token
+			apt-get install -y -q curl
+			echo "Waiting for K3S token from server..."
+			timeout 120 bash -c 'while [ ! -f /vagrant/k3s-token ]; do sleep 1; done'
 			K3S_TOKEN=$(cat /vagrant/k3s-token)
 			K3S_URL="https://192.168.56.110:6443"
 			curl -sfL https://get.k3s.io | K3S_URL=$K3S_URL K3S_TOKEN=$K3S_TOKEN sh -
-			cp /usr/local/bin/k3s /usr/local/bin/kubectl
+			echo "K3S Agent started"
 		SHELL
 	end
 

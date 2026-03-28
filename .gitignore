@@ -1,1 +1,9 @@
 .env
+
+# Vagrant
+.vagrant/
+*.box
+p1/k3s-token
+
+# Generated files
+p1/.vagrant
