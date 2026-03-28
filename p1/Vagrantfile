@@ -4,15 +4,15 @@ Vagrant.configure("2") do |config|
 	config.vm.boot_timeout = 600
 	config.vm.communicator = "ssh"
 
-	config.vm.define "goncaloS" do |goncaloS|
-		goncaloS.vm.hostname = "GoncaloS"
-		goncaloS.vm.network "private_network", ip: "192.168.56.110"
-		goncaloS.vm.provider "virtualbox" do |vb|
+	config.vm.define "gfontao-S" do |gfontao_S|
+		gfontao_S.vm.hostname = "gfontao-S"
+		gfontao_S.vm.network "private_network", ip: "192.168.56.110"
+		gfontao_S.vm.provider "virtualbox" do |vb|
 			vb.memory = "512"
 			vb.cpus = 1
-			vb.name = "p1_goncaloS"
+			vb.name = "p1_gfontao-S"
 		end
-		goncaloS.vm.provision "shell", inline: <<-SHELL
+		gfontao_S.vm.provision "shell", inline: <<-SHELL
 			apt-get update
 			apt-get install -y -q curl
 			curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
@@ -23,15 +23,15 @@ Vagrant.configure("2") do |config|
 		SHELL
 	end
 
-	config.vm.define "goncaloSW" do |goncaloSW|
-		goncaloSW.vm.hostname = "GoncaloSW"
-		goncaloSW.vm.network "private_network", ip: "192.168.56.111"
-		goncaloSW.vm.provider "virtualbox" do |vb|
+	config.vm.define "gfontao-SW" do |gfontao_SW|
+		gfontao_SW.vm.hostname = "gfontao-SW"
+		gfontao_SW.vm.network "private_network", ip: "192.168.56.111"
+		gfontao_SW.vm.provider "virtualbox" do |vb|
 			vb.memory = "512"
 			vb.cpus = 1
-			vb.name = "p1_goncaloSW"
+			vb.name = "p1_gfontao-SW"
 		end
-		goncaloSW.vm.provision "shell", inline: <<-SHELL
+		gfontao_SW.vm.provision "shell", inline: <<-SHELL
 			apt-get update
 			apt-get install -y -q curl
 			echo "Waiting for K3S token from server..."

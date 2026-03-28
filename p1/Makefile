@@ -1,6 +1,10 @@
 .PHONY: up down status clean ssh-server ssh-worker reload help
 .DEFAULT_GOAL := help
 
+MACHINE_NAME_S := gfontao-S
+MACHINE_NAME_W := gfontao-SW
+
+
 up:
 	@echo "Starting K3S Cluster with Vagrant..."
 	@echo "This may take 5-15 minutes on first run."
@@ -20,10 +24,10 @@ clean:
 	@rm -f k3s-token
 
 ssh-server:
-	vagrant ssh goncaloS
+	vagrant ssh $(MACHINE_NAME_S)
 
 ssh-worker:
-	vagrant ssh goncaloSW
+	vagrant ssh $(MACHINE_NAME_W)
 
 reload:
 	vagrant reload
@@ -39,7 +43,7 @@ help:
 	@echo "  make down         - Stop the VMs"
 	@echo "  make status       - Show VM status"
 	@echo "  make clean        - Destroy VMs and clean state"
-	@echo "  make ssh-server   - SSH into K3S master (goncaloS)"
-	@echo "  make ssh-worker   - SSH into K3S worker (goncaloSW)"
+	@echo "  make ssh-server   - SSH into K3S master ($(MACHINE_NAME_S))"
+	@echo "  make ssh-worker   - SSH into K3S worker ($(MACHINE_NAME_W))"
 	@echo "  make reload       - Reload and re-provision VMs"
 	@echo "  make help         - Show this help"
