@@ -1,0 +1,7 @@
+#Tips
+helm
+
+budget disrupting
+
+
+sudo modprobe -r kvm_intel kvm && echo "KVM disabled"
