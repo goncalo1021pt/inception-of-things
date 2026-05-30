@@ -1,0 +1,193 @@
+# App 1 — 1 replica
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-app1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1
+  template:
+    metadata:
+      labels:
+        app: app1
+    spec:
+      containers:
+        - name: app1
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html
+          configMap:
+            name: app1-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app1-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head><title>App 1</title></head>
+    <body style="background:#000;display:flex;justify-content:center;align-items:center;height:100vh;margin:0">
+      <h1 style="color:#FF4500;font-size:10rem;font-family:sans-serif">App 1</h1>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-app1
+spec:
+  selector:
+    app: app1
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# App 2 — 3 replicas
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-app2
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app2
+  template:
+    metadata:
+      labels:
+        app: app2
+    spec:
+      containers:
+        - name: app2
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html
+          configMap:
+            name: app2-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app2-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head><title>App 2</title></head>
+    <body style="background:#000;display:flex;justify-content:center;align-items:center;height:100vh;margin:0">
+      <h1 style="color:#FFFF00;font-size:10rem;font-family:sans-serif">App 2</h1>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-app2
+spec:
+  selector:
+    app: app2
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# App 3 — 1 replica, default backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-app3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app3
+  template:
+    metadata:
+      labels:
+        app: app3
+    spec:
+      containers:
+        - name: app3
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html
+          configMap:
+            name: app3-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app3-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head><title>App 3</title></head>
+    <body style="background:#000;display:flex;justify-content:center;align-items:center;height:100vh;margin:0">
+      <h1 style="color:#00FF00;font-size:10rem;font-family:sans-serif">App 3</h1>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-app3
+spec:
+  selector:
+    app: app3
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# Ingress — host routing + app3 as default
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apps-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  defaultBackend:
+    service:
+      name: svc-app3
+      port:
+        number: 80
+  rules:
+    - host: app1.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: svc-app1
+                port:
+                  number: 80
+    - host: app2.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: svc-app2
+                port:
+                  number: 80
