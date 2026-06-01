@@ -1,0 +1,30 @@
+Vagrant.configure("2") do |config|
+
+	config.vm.box = "bento/debian-12"
+	config.vm.boot_timeout = 600
+	config.vm.communicator = "ssh"
+
+	config.vm.define "gfontao-S" do |gfontao_S|
+		gfontao_S.vm.hostname = "gfontao-S"
+		gfontao_S.vm.network "private_network", ip: "192.168.56.110"
+		gfontao_S.vm.provider "virtualbox" do |vb|
+			vb.memory = "1024"
+			vb.cpus = 1
+			vb.name = "p2_gfontao-S"
+		end
+		gfontao_S.vm.provision "shell", inline: <<-SHELL
+			apt-get update
+			apt-get install -y -q curl
+			curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -s - \
+				--node-ip=192.168.56.110 \
+				--tls-san=192.168.56.110 \
+				--flannel-iface=eth1
+			kubectl apply -f /vagrant/confs/
+			kubectl rollout status deployment/app1 --timeout=180s
+			kubectl rollout status deployment/app2 --timeout=180s
+			kubectl rollout status deployment/app3 --timeout=180s
+			echo "P2 apps deployed."
+		SHELL
+	end
+
+end

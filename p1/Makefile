@@ -1,4 +1,4 @@
-.PHONY: up down status clean ssh-server ssh-worker reload help
+.PHONY: up down status clean ssh-server ssh-worker reload test help
 .DEFAULT_GOAL := help
 
 MACHINE_NAME_S := gfontao-S
@@ -32,6 +32,9 @@ ssh-worker:
 reload:
 	vagrant reload
 
+test:
+	@bash ../tests/p1-test.sh
+
 help:
 	@echo "Part 1: Vagrant K3S Setup"
 	@echo ""
@@ -46,4 +49,5 @@ help:
 	@echo "  make ssh-server   - SSH into K3S master ($(MACHINE_NAME_S))"
 	@echo "  make ssh-worker   - SSH into K3S worker ($(MACHINE_NAME_W))"
 	@echo "  make reload       - Reload and re-provision VMs"
+	@echo "  make test         - Run p1 verification checks"
 	@echo "  make help         - Show this help"
