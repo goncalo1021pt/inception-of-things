@@ -2,6 +2,7 @@
 
 # Vagrant
 .vagrant/
+*/.vagrant/
 *.box
 p1/k3s-token
 
