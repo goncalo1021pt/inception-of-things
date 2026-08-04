@@ -3,26 +3,26 @@ Vagrant.configure("2") do |config|
   config.vm.box = "bento/debian-13"
   config.vm.boot_timeout = 600
 
-  config.vm.define "gfontao-S" do |gfontao_S|
-    gfontao_S.vm.hostname = "gfontao-S"
-    gfontao_S.vm.network "private_network", ip: "192.168.56.110"
-    gfontao_S.vm.provider "virtualbox" do |vb|
-      vb.memory = "512"
-      vb.cpus = 1
-      vb.name = "p1_gfontao-S"
-    end
-    gfontao_S.vm.provision "shell", path: "scripts/server.sh"
-  end
+	config.vm.define "gfontao-S" do |gfontao_S|
+		gfontao_S.vm.hostname = "gfontao-S"
+		gfontao_S.vm.network "private_network", ip: "192.168.56.110"
+		gfontao_S.vm.provider "virtualbox" do |vb|
+			vb.memory = "512"
+			vb.cpus = 1
+			vb.name = "p1_gfontao-S"
+		end
+		gfontao_S.vm.provision "shell", path: "scripts/server.sh"
+	end
 
-  config.vm.define "gfontao-SW" do |gfontao_SW|
-    gfontao_SW.vm.hostname = "gfontao-SW"
-    gfontao_SW.vm.network "private_network", ip: "192.168.56.111"
-    gfontao_SW.vm.provider "virtualbox" do |vb|
-      vb.memory = "512"
-      vb.cpus = 1
-      vb.name = "p1_gfontao-SW"
-    end
-    gfontao_SW.vm.provision "shell", path: "scripts/worker.sh"
-  end
+	config.vm.define "gfontao-SW" do |gfontao_SW|
+		gfontao_SW.vm.hostname = "gfontao-SW"
+		gfontao_SW.vm.network "private_network", ip: "192.168.56.111"
+		gfontao_SW.vm.provider "virtualbox" do |vb|
+			vb.memory = "512"
+			vb.cpus = 1
+			vb.name = "p1_gfontao-SW"
+		end
+		gfontao_SW.vm.provision "shell", path: "scripts/worker.sh"
+	end
 
 end
