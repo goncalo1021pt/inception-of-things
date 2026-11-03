@@ -129,8 +129,29 @@ else
 fi
 
 echo ""
+
+# 6. Routing from the host machine (what the evaluator does during defense)
+echo "--- Routing from host ---"
+host_route() {
+    local expected="$1"; shift
+    local label="$1"; shift
+    local resp
+    resp=$(curl -s -m 10 -w '\nHTTP_CODE=%{http_code}' "$@" http://192.168.56.110 || true)
+    if [[ "$resp" == *"Hello from $expected"* ]]; then
+        pass "host: $label → serves $expected"
+    else
+        fail "host: $label → did not receive $expected response"
+        info "$(echo "$resp" | grep -oE 'Hello from app[0-9]|HTTP_CODE=[0-9]+|404 page not found' | tr '\n' ' ')"
+    fi
+}
+host_route app1 "Host: app1.com" -H "Host: app1.com"
+host_route app2 "Host: app2.com" -H "Host: app2.com"
+host_route app3 "(no Host)     "
+host_route app3 "Host: foo.com " -H "Host: foo.com"
+
+echo ""
 echo "============================================"
-echo -e "  Results: ${GREEN}${PASS} passed${NC}  ${RED}${FAIL} failed${NC}"
+echo -e "  Results:${GREEN}${PASS} passed${NC}  ${RED}${FAIL} failed${NC}"
 echo "============================================"
 echo ""
 
