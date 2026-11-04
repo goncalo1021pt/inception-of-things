@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+UI_PORT="${ARGOCD_UI_PORT:-8080}"
+
 command -v kubectl >/dev/null 2>&1 || {
   printf 'Error: kubectl is required.\n' >&2
   exit 1
@@ -11,8 +13,8 @@ password="$(
     -o jsonpath='{.data.password}' 2>/dev/null | base64 --decode
 )"
 
-printf 'Argo CD URL: https://localhost:8080\n'
+printf 'Argo CD URL: https://localhost:%s\n' "${UI_PORT}"
 printf 'Username: admin\n'
 printf 'Password: %s\n\n' "${password}"
 printf 'Keep this process running and press Ctrl+C when finished.\n'
-kubectl port-forward service/argocd-server -n argocd 8080:443
+kubectl port-forward service/argocd-server -n argocd "${UI_PORT}:443"

@@ -3,9 +3,10 @@ set -Eeuo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:-iot}"
 ARGOCD_VERSION="${ARGOCD_VERSION:-v3.4.2}"
-REPO_URL="${1:-${GIT_REPO_URL:-}}"
+ARGOCD_POLL_INTERVAL="${ARGOCD_POLL_INTERVAL:-30s}"
+REPO_URL="${1:-${GIT_REPO_URL:-https://github.com/goncalo1021pt/gfontao-iot.git}}"
 TARGET_REVISION="${2:-${GIT_TARGET_REVISION:-main}}"
-APP_PATH="${3:-${GIT_APP_PATH:-p3/confs/dev}}"
+APP_PATH="${3:-${GIT_APP_PATH:-manifests}}"
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 P3_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
@@ -60,6 +61,19 @@ kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=
 kubectl rollout status deployment/argocd-server -n argocd --timeout=5m
 kubectl rollout status deployment/argocd-repo-server -n argocd --timeout=5m
 
+# Poll Git every ~30s instead of the default ~3min (+ jitter) so the live
+# v1 -> v2 switch shows up quickly during the defense.
+log "Setting Argo CD Git polling interval to ${ARGOCD_POLL_INTERVAL}"
+kubectl patch configmap argocd-cm -n argocd --type merge -p \
+  "{\"data\":{\"timeout.reconciliation\":\"${ARGOCD_POLL_INTERVAL}\",\"timeout.reconciliation.jitter\":\"0s\"}}"
+# The repo-server also caches "branch -> commit" lookups (3min by default).
+kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p \
+  "{\"data\":{\"reposerver.revision.cache.expiration\":\"${ARGOCD_POLL_INTERVAL}\"}}"
+kubectl rollout restart statefulset/argocd-application-controller -n argocd
+kubectl rollout restart deployment/argocd-repo-server -n argocd
+kubectl rollout status statefulset/argocd-application-controller -n argocd --timeout=5m
+kubectl rollout status deployment/argocd-repo-server -n argocd --timeout=5m
+
 escape_sed_replacement() {
   printf '%s' "$1" | sed 's/[&|\\]/\\&/g'
 }
@@ -78,7 +92,8 @@ kubectl apply -f "${rendered_application}"
 log "Waiting for Argo CD to synchronize the application"
 if kubectl wait application/iot-app -n argocd \
   --for=jsonpath='{.status.sync.status}'=Synced --timeout=5m \
-  && kubectl rollout status deployment/playground -n dev --timeout=5m; then
+  && kubectl rollout status deployment/playground -n dev --timeout=5m \
+  && timeout 120 bash -c 'until curl -sf -m 3 http://localhost:8888/ | grep -q "\"status\":\"ok\""; do sleep 2; done'; then
   log "Part 3 is ready"
   printf 'Application: http://localhost:8888\n'
   printf 'Argo CD UI: run bash p3/scripts/argocd-ui.sh\n'

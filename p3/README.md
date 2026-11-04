@@ -9,7 +9,9 @@ It creates:
 - one `dev` namespace for the application;
 - one Argo CD Application named `iot-app`;
 - the `wil42/playground` application exposed at `http://localhost:8888`; and
-- a GitOps flow where Argo CD deploys the app from this GitHub repository.
+- a GitOps flow where Argo CD deploys the app from the public GitHub
+  repository [`goncalo1021pt/gfontao-iot`](https://github.com/goncalo1021pt/gfontao-iot)
+  (its name contains the login `gfontao`, as the subject requires).
 
 ## Important: Linux vs Windows
 
@@ -43,11 +45,13 @@ p3/
         └── cleanup.ps1
 ```
 
-Argo CD watches the Kubernetes manifests in:
+Argo CD watches the `manifests/` folder of the GitOps repository:
 
 ```text
-p3/confs/dev
+https://github.com/goncalo1021pt/gfontao-iot.git  (branch main, path manifests)
 ```
+
+`p3/confs/dev` holds the initial (v1) copy of those manifests.
 
 ## What K3d is doing
 
@@ -89,21 +93,14 @@ sudo apt-get install -y git curl ca-certificates
 If the repository is not cloned yet:
 
 ```bash
-git clone https://github.com/YOUR_LOGIN/YOUR_REPOSITORY.git
-cd YOUR_REPOSITORY
-```
-
-Example:
-
-```bash
-git clone https://github.com/Magalvo/IoT.git
-cd IoT
+git clone https://github.com/goncalo1021pt/inception-of-things.git
+cd inception-of-things
 ```
 
 If the repository is already cloned:
 
 ```bash
-cd IoT
+cd inception-of-things
 git pull
 ```
 
@@ -145,48 +142,31 @@ Then confirm Docker works without `sudo`:
 docker info
 ```
 
-## 5. Push the repository to public GitHub
+## 5. The public GitOps repository
 
-The subject requires the Argo CD application to use a public GitHub repository.
-The repository name must contain at least one team member login.
-
-If this repository is already public and pushed, you can skip this step.
-
-Otherwise:
-
-```bash
-git status
-git add .
-git commit -m "Set up IoT Part 3"
-git branch -M main
-git remote add origin https://github.com/YOUR_LOGIN/YOUR_REPOSITORY.git
-git push -u origin main
-```
-
-For this project, the repository URL currently being tested is:
+The subject requires the Argo CD application to use a public GitHub repository
+whose name contains at least one team member login. That repository is:
 
 ```text
-https://github.com/Magalvo/IoT.git
+https://github.com/goncalo1021pt/gfontao-iot.git
 ```
+
+It contains only the Kubernetes manifests in `manifests/`, starting at
+`wil42/playground:v1`. Make sure it is back on `v1` before a defense.
 
 ## 6. Create the K3d cluster and install Argo CD
 
 From the repository root, run:
 
 ```bash
-bash p3/scripts/setup.sh https://github.com/YOUR_LOGIN/YOUR_REPOSITORY.git
+bash p3/scripts/setup.sh
 ```
 
-Example:
-
-```bash
-bash p3/scripts/setup.sh https://github.com/Magalvo/IoT.git
-```
-
+With no arguments it uses `gfontao-iot`, branch `main`, path `manifests`.
 Optional full form:
 
 ```bash
-bash p3/scripts/setup.sh REPOSITORY_URL main p3/confs/dev
+bash p3/scripts/setup.sh REPOSITORY_URL [REVISION] [APP_PATH]
 ```
 
 The setup script will:
@@ -248,6 +228,12 @@ https://localhost:8080
 
 Accept the local self-signed certificate warning.
 
+If port 8080 is already used on the machine, pick another one:
+
+```bash
+ARGOCD_UI_PORT=8443 bash p3/scripts/argocd-ui.sh
+```
+
 Login:
 
 ```text
@@ -257,33 +243,20 @@ password: printed by the script
 
 ## 9. Demonstrate the v1 to v2 GitOps update
 
-Edit:
-
-```text
-p3/confs/dev/deployment.yaml
-```
-
-Change:
-
-```yaml
-image: wil42/playground:v1
-```
-
-to:
-
-```yaml
-image: wil42/playground:v2
-```
-
-Commit and push:
+Do this in a clone of the GitOps repository (pushing needs GitHub credentials,
+e.g. `gh auth login`):
 
 ```bash
-git add p3/confs/dev/deployment.yaml
-git commit -m "Deploy playground v2"
-git push
+git clone https://github.com/goncalo1021pt/gfontao-iot.git
+cd gfontao-iot
+cat manifests/deployment.yaml | grep v1
+sed -i 's/wil42\/playground:v1/wil42\/playground:v2/g' manifests/deployment.yaml
+git add . && git commit -m "v2" && git push
+cat manifests/deployment.yaml | grep v2
 ```
 
-Argo CD checks Git automatically. Wait for the rollout:
+Argo CD checks Git automatically: `setup.sh` sets the polling interval to
+~30s (`ARGOCD_POLL_INTERVAL`, Argo CD's default is ~3 min). Wait for the rollout:
 
 ```bash
 kubectl rollout status deployment/playground -n dev --timeout=5m
@@ -367,7 +340,7 @@ Example:
 
 ```powershell
 cd C:\Users\diogo.santos\Documents
-git clone https://github.com/Magalvo/IoT.git
+git clone https://github.com/goncalo1021pt/gfontao-iot.git
 cd IoT
 ```
 
@@ -413,7 +386,7 @@ Example:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File p3/scripts/windows/setup.ps1 `
-  -RepoUrl https://github.com/Magalvo/IoT.git
+  -RepoUrl https://github.com/goncalo1021pt/gfontao-iot.git
 ```
 
 Optional full form:
@@ -422,7 +395,7 @@ Optional full form:
 powershell -ExecutionPolicy Bypass -File p3/scripts/windows/setup.ps1 `
   -RepoUrl https://github.com/YOUR_LOGIN/YOUR_REPOSITORY.git `
   -TargetRevision main `
-  -AppPath p3/confs/dev
+  -AppPath manifests
 ```
 
 The setup script will:
@@ -479,6 +452,12 @@ https://localhost:8080
 ```
 
 Accept the local self-signed certificate warning.
+
+If port 8080 is already used on the machine, pick another one:
+
+```bash
+ARGOCD_UI_PORT=8443 bash p3/scripts/argocd-ui.sh
+```
 
 Login:
 
@@ -570,7 +549,7 @@ Check that:
 - the GitHub repository is public;
 - the latest files were pushed;
 - the repository URL passed to the setup script is correct;
-- the manifests exist at `p3/confs/dev`;
+- the manifests exist at `manifests/` in `gfontao-iot`;
 - the branch is `main`, unless you passed a different `TargetRevision`.
 
 Useful command:
@@ -603,7 +582,7 @@ Linux:
 
 ```bash
 bash p3/scripts/cleanup.sh
-bash p3/scripts/setup.sh https://github.com/YOUR_LOGIN/YOUR_REPOSITORY.git
+bash p3/scripts/setup.sh
 ```
 
 Windows:
