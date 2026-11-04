@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: app2
-        image: paulbouwer/hello-kubernetes:1.10
+        image: paulbouwer/hello-kubernetes:1.11
         ports:
         - containerPort: 8080
         env:

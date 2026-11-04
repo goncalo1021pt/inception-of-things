@@ -25,39 +25,39 @@ echo ""
 echo "--- VM state ---"
 STATUS=$(vagrant status --machine-readable 2>/dev/null)
 
-if echo "$STATUS" | grep -q "gfontao-S,state,running"; then
-    pass "gfontao-S is running"
+if echo "$STATUS" | grep -q "gfontaoS,state,running"; then
+    pass "gfontaoS is running"
 else
-    fail "gfontao-S is not running"
+    fail "gfontaoS is not running"
 fi
 
-if echo "$STATUS" | grep -q "gfontao-SW,state,running"; then
-    pass "gfontao-SW is running"
+if echo "$STATUS" | grep -q "gfontaoSW,state,running"; then
+    pass "gfontaoSW is running"
 else
-    fail "gfontao-SW is not running"
+    fail "gfontaoSW is not running"
 fi
 
 echo ""
 
 # 2. SSH without password
 echo "--- SSH (no password) ---"
-if vagrant ssh gfontao-S -c "echo ok" &>/dev/null; then
-    pass "SSH into gfontao-S works without password"
+if vagrant ssh gfontaoS -c "echo ok" &>/dev/null; then
+    pass "SSH into gfontaoS works without password"
 else
-    fail "SSH into gfontao-S failed"
+    fail "SSH into gfontaoS failed"
 fi
 
-if vagrant ssh gfontao-SW -c "echo ok" &>/dev/null; then
-    pass "SSH into gfontao-SW works without password"
+if vagrant ssh gfontaoSW -c "echo ok" &>/dev/null; then
+    pass "SSH into gfontaoSW works without password"
 else
-    fail "SSH into gfontao-SW failed"
+    fail "SSH into gfontaoSW failed"
 fi
 
 echo ""
 
 # 3. Cluster node checks (single kubectl call, reused for all checks)
 echo "--- Cluster nodes ---"
-NODES=$(vagrant ssh gfontao-S -c "kubectl get nodes -o wide 2>/dev/null" 2>/dev/null)
+NODES=$(vagrant ssh gfontaoS -c "kubectl get nodes -o wide 2>/dev/null" 2>/dev/null)
 
 READY_COUNT=$(echo "$NODES" | grep -c " Ready " || true)
 if [[ "$READY_COUNT" -eq 2 ]]; then
@@ -68,44 +68,44 @@ else
     echo "$NODES" | sed 's/^/      /'
 fi
 
-if echo "$NODES" | grep -q "gfontao-s.*control-plane"; then
-    pass "gfontao-s has role: control-plane"
+if echo "$NODES" | grep -q "gfontaos.*control-plane"; then
+    pass "gfontaos has role: control-plane"
 else
-    fail "gfontao-s does not have control-plane role"
+    fail "gfontaos does not have control-plane role"
     info "Actual output:"
-    echo "$NODES" | grep "gfontao-s" | sed 's/^/      /' || true
+    echo "$NODES" | grep "^gfontaos " | sed 's/^/      /' || true
 fi
 
-if echo "$NODES" | grep "gfontao-sw" | grep -qv "control-plane"; then
-    pass "gfontao-sw has role: <none> (agent)"
+if echo "$NODES" | grep "gfontaosw" | grep -qv "control-plane"; then
+    pass "gfontaosw has role: <none> (agent)"
 else
-    fail "gfontao-sw unexpectedly has a control-plane role"
+    fail "gfontaosw unexpectedly has a control-plane role"
 fi
 
 if echo "$NODES" | grep -q "192.168.56.110"; then
-    pass "gfontao-s INTERNAL-IP is 192.168.56.110"
+    pass "gfontaos INTERNAL-IP is 192.168.56.110"
 else
-    fail "gfontao-s INTERNAL-IP is not 192.168.56.110"
+    fail "gfontaos INTERNAL-IP is not 192.168.56.110"
     info "Actual IPs:"
     echo "$NODES" | awk 'NR>1 {print $1, $6}' | sed 's/^/      /' || true
 fi
 
 if echo "$NODES" | grep -q "192.168.56.111"; then
-    pass "gfontao-sw INTERNAL-IP is 192.168.56.111"
+    pass "gfontaosw INTERNAL-IP is 192.168.56.111"
 else
-    fail "gfontao-sw INTERNAL-IP is not 192.168.56.111"
+    fail "gfontaosw INTERNAL-IP is not 192.168.56.111"
 fi
 
 echo ""
 
 # 4. Worker NIC
 echo "--- Network interfaces ---"
-ETH1=$(vagrant ssh gfontao-SW -c "ip a show eth1 2>/dev/null" 2>/dev/null)
+ETH1=$(vagrant ssh gfontaoSW -c "ip a show eth1 2>/dev/null" 2>/dev/null)
 
 if echo "$ETH1" | grep -q "192.168.56.111"; then
-    pass "gfontao-SW eth1 has inet 192.168.56.111"
+    pass "gfontaoSW eth1 has inet 192.168.56.111"
 else
-    fail "gfontao-SW eth1 does not have 192.168.56.111"
+    fail "gfontaoSW eth1 does not have 192.168.56.111"
     info "eth1 output:"
     echo "$ETH1" | sed 's/^/      /' || true
 fi

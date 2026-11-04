@@ -4,13 +4,13 @@ Vagrant.configure("2") do |config|
 	config.vm.boot_timeout = 600
 	config.vm.communicator = "ssh"
 
-	config.vm.define "gfontao-S" do |gfontao_S|
-		gfontao_S.vm.hostname = "gfontao-S"
+	config.vm.define "gfontaoS" do |gfontao_S|
+		gfontao_S.vm.hostname = "gfontaoS"
 		gfontao_S.vm.network "private_network", ip: "192.168.56.110"
 		gfontao_S.vm.provider "virtualbox" do |vb|
 			vb.memory = "1024"
 			vb.cpus = 1
-			vb.name = "p2_gfontao-S"
+			vb.name = "p2_gfontaoS"
 		end
 		gfontao_S.vm.provision "shell", path: "scripts/server.sh"
 	end

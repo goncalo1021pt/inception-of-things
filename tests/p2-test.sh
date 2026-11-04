@@ -24,17 +24,17 @@ echo ""
 # 1. VM running
 echo "--- VM state ---"
 STATUS=$(vagrant status --machine-readable 2>/dev/null)
-if echo "$STATUS" | grep -q "gfontao-S,state,running"; then
-    pass "gfontao-S is running"
+if echo "$STATUS" | grep -q "gfontaoS,state,running"; then
+    pass "gfontaoS is running"
 else
-    fail "gfontao-S is not running"
+    fail "gfontaoS is not running"
 fi
 
 echo ""
 
 # 2. Node ready with correct IP
 echo "--- Cluster node ---"
-NODES=$(vagrant ssh gfontao-S -c "kubectl get nodes -o wide 2>/dev/null" 2>/dev/null)
+NODES=$(vagrant ssh gfontaoS -c "kubectl get nodes -o wide 2>/dev/null" 2>/dev/null)
 
 if echo "$NODES" | grep -q "Ready"; then
     pass "Node is Ready"
@@ -54,7 +54,7 @@ echo ""
 
 # 3. Pods running
 echo "--- Pods ---"
-PODS=$(vagrant ssh gfontao-S -c "kubectl get pods 2>/dev/null" 2>/dev/null)
+PODS=$(vagrant ssh gfontaoS -c "kubectl get pods 2>/dev/null" 2>/dev/null)
 
 APP1_READY=$(echo "$PODS" | grep "^app1" | grep -c "Running" || true)
 APP2_READY=$(echo "$PODS" | grep "^app2" | grep -c "Running" || true)
@@ -82,7 +82,7 @@ echo ""
 
 # 4. Ingress exists
 echo "--- Ingress ---"
-INGRESS=$(vagrant ssh gfontao-S -c "kubectl get ingress 2>/dev/null" 2>/dev/null)
+INGRESS=$(vagrant ssh gfontaoS -c "kubectl get ingress 2>/dev/null" 2>/dev/null)
 if echo "$INGRESS" | grep -q "p2-ingress"; then
     pass "Ingress resource exists"
 else
@@ -94,7 +94,7 @@ echo ""
 
 # 5. Routing via curl (single SSH session — mirrors subject's curl examples from inside the VM)
 echo "--- Routing ---"
-ROUTES=$(vagrant ssh gfontao-S -c "
+ROUTES=$(vagrant ssh gfontaoS -c "
     echo '---APP1---'
     curl -s -H 'Host: app1.com' http://192.168.56.110
     echo '---APP2---'

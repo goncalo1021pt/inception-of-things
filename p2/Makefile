@@ -1,7 +1,7 @@
 .PHONY: up down status clean ssh reload test hosts help
 .DEFAULT_GOAL := help
 
-MACHINE_NAME := gfontao-S
+MACHINE_NAME := gfontaoS
 
 up:
 	@echo "Starting P2 K3s instance..."

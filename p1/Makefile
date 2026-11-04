@@ -1,8 +1,8 @@
 .PHONY: up down status clean ssh-server ssh-worker reload test help
 .DEFAULT_GOAL := help
 
-MACHINE_NAME_S := gfontao-S
-MACHINE_NAME_W := gfontao-SW
+MACHINE_NAME_S := gfontaoS
+MACHINE_NAME_W := gfontaoSW
 
 
 up:
