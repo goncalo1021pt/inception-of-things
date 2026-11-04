@@ -1,0 +1,86 @@
+# Minimal GitLab (CE) for a local k3d cluster: plain HTTP behind k3d's Traefik.
+# Based on GitLab's own values-minikube-minimum.yaml.
+global:
+  edition: ce
+  # External PostgreSQL and Redis (chart >= 10 no longer bundles them): see gitlab-deps.yaml
+  psql:
+    host: postgresql
+    password:
+      secret: gitlab-postgresql
+      key: password
+  redis:
+    host: redis
+    auth:
+      secret: gitlab-redis
+      key: password
+  # Only Git hosting is needed: no object storage (the bundled MinIO is gone too)
+  appConfig:
+    object_store:
+      enabled: false
+    artifacts:
+      enabled: false
+    lfs:
+      enabled: false
+    uploads:
+      enabled: false
+    packages:
+      enabled: false
+    externalDiffs:
+      enabled: false
+    terraformState:
+      enabled: false
+    ciSecureFiles:
+      enabled: false
+    dependencyProxy:
+      enabled: false
+  hosts:
+    domain: localhost
+    https: false
+  # Chart 10 defaults to the Gateway API + Envoy; k3d's Traefik serves plain Ingress.
+  gatewayApi:
+    enabled: false
+    installEnvoy: false
+    configureCertmanager: false
+  ingress:
+    enabled: true
+    class: traefik
+    provider: traefik
+    configureCertmanager: false
+    tls:
+      enabled: false
+  kas:
+    enabled: false
+  rails:
+    bootsnap:
+      enabled: false
+
+installCertmanager: false
+postgresql:
+  install: false
+redis:
+  install: false
+certmanager-issuer:
+  email: gfontao@localhost.localdomain
+nginx-ingress:
+  enabled: false
+prometheus:
+  install: false
+gitlab-runner:
+  install: false
+registry:
+  enabled: false
+
+gitlab:
+  # Not needed for the lab: backups/rake toolbox (needs object storage) and SSH access
+  # (clone/push use HTTP, and its Traefik TCP route is not valid on k3s' Traefik).
+  toolbox:
+    enabled: false
+  gitlab-shell:
+    enabled: false
+  webservice:
+    minReplicas: 1
+    maxReplicas: 1
+    workerProcesses: 1
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
