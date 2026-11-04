@@ -12,7 +12,7 @@ environment the defense will use. **Test only**: do not redesign anything.
 - Branch under test: `goncalo/delivery` of `https://github.com/goncalo1021pt/inception-of-things`
 - p1 and p2 use **Vagrant + VirtualBox inside this VM** (nested virtualization).
 - p3 uses **Docker + k3d** inside this VM.
-- The bonus (GitLab) is not built yet. Ignore it.
+- The bonus (GitLab in k3d, `bonus/`) is tested last, in step 8, once p1-p3 pass.
 
 ## Rules for this session
 
@@ -34,6 +34,7 @@ environment the defense will use. **Test only**: do not redesign anything.
 | `make p2-up` | ~5 min | `make -C p2 test`: 14 passed, 0 failed |
 | `p3/scripts/setup.sh` | ~2.5 min | `verify.sh` shows `v1`, `curl localhost:8888` answers right away |
 | p3 `git push` v1→v2 | ~35–55 s until `curl` shows v2 | no manual refresh needed |
+| `bonus/scripts/setup.sh` | ~10–15 min (images pulled) | `tests/bonus-test.sh --roundtrip`: 17 passed, 0 failed |
 
 Nested virtualization is usually 2–3× slower. Slower is fine; failing is not.
 
@@ -200,6 +201,28 @@ Clean up:
 cd ~/inception-of-things && bash p3/scripts/cleanup.sh
 ```
 
+## Step 8: Bonus (GitLab instead of GitHub, namespace `gitlab`)
+
+Only after p3 is cleaned up (`bash p3/scripts/cleanup.sh`): both use port 8888.
+Needs **~8 GB free RAM** and ports 80 and 8888 free.
+
+```bash
+bash bonus/scripts/install.sh      # adds Helm (sudo); Docker/k3d/kubectl are already there from step 7
+bash bonus/scripts/setup.sh        # background + log, ~10-15 min; installs the LATEST GitLab chart
+bash bonus/scripts/verify.sh
+bash tests/bonus-test.sh --roundtrip   # expect 17 passed; pushes v2 to GitLab and back to v1 by itself
+```
+
+If `setup.sh` stops with "gitlab.localhost does not resolve", run
+`echo '127.0.0.1 gitlab.localhost' | sudo tee -a /etc/hosts` and rerun it (it is idempotent).
+
+Logins and the UI: `bash bonus/scripts/credentials.sh` (GitLab at `http://gitlab.localhost`, user `root`).
+Finally `bash bonus/scripts/cleanup.sh`.
+
+Facts worth knowing (details in `bonus/README.md`): GitLab chart 10 / GitLab 19 no longer
+bundles PostgreSQL, Redis or MinIO, so `setup.sh` deploys PostgreSQL and Redis itself and
+disables object storage, toolbox and SSH; Argo CD reads the private project through a Secret.
+
 ---
 
 ## Problems already found and fixed on this branch: don't re-fix them
@@ -211,6 +234,7 @@ cd ~/inception-of-things && bash p3/scripts/cleanup.sh
 | First curl to `.110` hangs ~10–15 s right after p1 was destroyed | Host ARP cache still has the old VM's MAC | `p2/scripts/server.sh` sends a gratuitous ARP (`arping -U`) |
 | Argo CD UI port-forward fails: "address already in use" | Something else on port 8080 | `ARGOCD_UI_PORT` override |
 | v1→v2 push takes ~6 min to show up | Argo CD default polling (~3 min + jitter) plus the repo-server's 3 min branch cache | `setup.sh` sets both to 30 s |
+| Bonus: migrations job `Error`, Postgres "out of shared memory" | already fixed in `bonus/confs/gitlab-deps.yaml` (`max_locks_per_transaction`); don't lower it |
 | `curl localhost:8888` empty right after `setup.sh` says ready | Pod Ready slightly before the k3d load balancer forwards | `setup.sh` waits until the app actually answers |
 
 ## Troubleshooting nested virtualization
