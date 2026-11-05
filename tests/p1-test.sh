@@ -65,6 +65,7 @@ if [[ "$READY_COUNT" -eq 2 ]]; then
 else
     fail "Expected 2 Ready nodes, got $READY_COUNT"
     info "kubectl get nodes -o wide output:"
+    # shellcheck disable=SC2001
     echo "$NODES" | sed 's/^/      /'
 fi
 
@@ -107,6 +108,7 @@ if echo "$ETH1" | grep -q "192.168.56.111"; then
 else
     fail "gfontaoSW eth1 does not have 192.168.56.111"
     info "eth1 output:"
+    # shellcheck disable=SC2001
     echo "$ETH1" | sed 's/^/      /' || true
 fi
 

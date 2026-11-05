@@ -1,4 +1,4 @@
-.PHONY: up down status clean ssh reload test hosts help
+.PHONY: re up down status clean ssh reload test hosts help
 .DEFAULT_GOAL := help
 
 MACHINE_NAME := gfontaoS
@@ -31,6 +31,8 @@ hosts:
 test:
 	@bash ../tests/p2-test.sh
 
+re: clean up
+
 help:
 	@echo "Part 2: K3s + Three Applications"
 	@echo ""
@@ -42,4 +44,5 @@ help:
 	@echo "  make reload  - Reload and re-provision"
 	@echo "  make hosts   - Add app1/2/3.com to /etc/hosts (idempotent)"
 	@echo "  make test    - Run p2 verification checks"
+	@echo "  make re      - clean + up"
 	@echo "  make help    - Show this help"

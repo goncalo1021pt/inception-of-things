@@ -1,67 +1,63 @@
-.PHONY: help p1-up p1-down p1-status p1-clean p1-ssh-server p1-ssh-worker \
-        p2-up p2-down p2-status p2-clean p2-ssh p2-reload
+.PHONY: help install check clean
 .DEFAULT_GOAL := help
+MAKEFLAGS += --no-print-directory
+
+# Every part has its own Makefile with the same verbs (up, down, status, clean, test, help).
+# <part>-<target> forwards to it: `make p2-up` == `make -C p2 up`.
+p1-%:
+	@$(MAKE) -C p1 $*
+
+p2-%:
+	@$(MAKE) -C p2 $*
+
+p3-%:
+	@$(MAKE) -C p3 $*
+
+bonus-%:
+	@$(MAKE) -C bonus $*
 
 help:
 	@echo "Inception of Things - 42 Project"
 	@echo ""
-	@echo "Quick Start:"
-	@echo "  make p1-up        - Start Part 1 K3s cluster (server + worker)"
-	@echo "  make p2-up        - Start Part 2 K3s server with 3 routed apps"
+	@echo "Every part has the same targets:  make <part>-<target>   (part: p1 p2 p3 bonus)"
 	@echo ""
-	@echo "Part 1 Targets:"
-	@echo "  make p1-up         - Start K3s cluster with 2 nodes (master + worker)"
-	@echo "  make p1-down       - Stop Part 1 VMs"
-	@echo "  make p1-status     - Show Part 1 VM status"
-	@echo "  make p1-clean      - Destroy Part 1 VMs and clean state"
-	@echo "  make p1-ssh-server - SSH into K3s master"
-	@echo "  make p1-ssh-worker - SSH into K3s worker"
+	@echo "  <part>-up        Build and start the part"
+	@echo "  <part>-down      Stop it (keeps state)"
+	@echo "  <part>-status    Show its state"
+	@echo "  <part>-test      Run its verification checks (tests/<part>-test.sh)"
+	@echo "  <part>-clean     Destroy it and clean state"
+	@echo "  <part>-re        clean + up (p3, bonus)"
+	@echo "  <part>-help      Show that part's own help"
 	@echo ""
-	@echo "Part 2 Targets:"
-	@echo "  make p2-up         - Boot VM, install K3s, deploy 3 apps with Ingress"
-	@echo "  make p2-down       - Stop Part 2 VM"
-	@echo "  make p2-status     - Show Part 2 VM status"
-	@echo "  make p2-clean      - Destroy Part 2 VM and clean state"
-	@echo "  make p2-ssh        - SSH into Part 2 VM"
-	@echo "  make p2-reload     - Reload and re-provision"
+	@echo "Parts:"
+	@echo "  p1     2 Vagrant VMs, K3s server + agent       (extra: p1-ssh-server, p1-ssh-worker, p1-reload)"
+	@echo "  p2     1 Vagrant VM, K3s, 3 apps behind Ingress (extra: p2-ssh, p2-reload, p2-hosts)"
+	@echo "  p3     k3d + Argo CD, GitOps from GitHub        (extra: p3-install, p3-ui, p3-roundtrip)"
+	@echo "  bonus  k3d + local GitLab + Argo CD             (extra: bonus-install, bonus-ui, bonus-roundtrip)"
 	@echo ""
-	@echo "After 'make p2-up', test with:"
-	@echo "  curl -H 'Host: app1.com' 192.168.56.110"
-	@echo "  curl -H 'Host: app2.com' 192.168.56.110"
-	@echo "  curl 192.168.56.110"
+	@echo "Global:"
+	@echo "  make install     Install Docker, k3d, kubectl and Helm (uses sudo; Vagrant/VirtualBox are not included)"
+	@echo "  make check       Build, test and clean p1, p2, p3 and the bonus, one after the other (~40 min)"
+	@echo "  make clean       Destroy everything"
+	@echo ""
+	@echo "Constraints: p1 and p2 share 192.168.56.110, p3 and the bonus share port 8888:"
+	@echo "run one of each pair at a time (p3-up / bonus-up refuse to start if the other is running)."
 
-p2-up:
-	@$(MAKE) -C p2 up
+install:
+	@$(MAKE) -C bonus install
 
-p2-down:
-	@$(MAKE) -C p2 down
+# Full regression: each part is built, tested and destroyed before the next one starts.
+# Stops at the first failure and leaves that part up so it can be inspected.
+check:
+	@$(MAKE) p1-up p1-test p1-clean
+	@$(MAKE) p2-up p2-test p2-clean
+	@$(MAKE) p3-up p3-test p3-clean
+	@$(MAKE) bonus-up bonus-test bonus-clean
+	@echo ""
+	@echo "All parts built, tested and cleaned."
 
-p2-status:
-	@$(MAKE) -C p2 status
-
-p2-clean:
-	@$(MAKE) -C p2 clean
-
-p2-ssh:
-	@$(MAKE) -C p2 ssh
-
-p2-reload:
-	@$(MAKE) -C p2 reload
-
-p1-up:
-	@$(MAKE) -C p1 up
-
-p1-down:
-	@$(MAKE) -C p1 down
-
-p1-status:
-	@$(MAKE) -C p1 status
-
-p1-clean:
-	@$(MAKE) -C p1 clean
-
-p1-ssh-server:
-	@$(MAKE) -C p1 ssh-server
-
-p1-ssh-worker:
-	@$(MAKE) -C p1 ssh-worker
+clean:
+	-@$(MAKE) p1-clean
+	-@$(MAKE) p2-clean
+	-@$(MAKE) p3-clean
+	-@$(MAKE) bonus-clean
