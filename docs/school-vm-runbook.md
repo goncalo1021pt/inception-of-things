@@ -26,6 +26,19 @@ environment the defense will use. **Test only**: do not redesign anything.
    background with a timeout and log to a file. Never let a hang go unnoticed.
 5. Record every result in `~/iot-results.md` (see "Report" at the end).
 
+## Shortcuts: the Makefiles
+
+Every command below also exists as a make target (`make help` lists them), so these are equivalent:
+
+| Step | Command |
+|---|---|
+| p1 / p2 up, test, destroy | `make p1-up p1-test p1-clean`, `make p2-up p2-test p2-clean` |
+| p3 install, up, test, destroy | `make p3-install p3-up p3-test p3-clean` (`p3-roundtrip` = live v1→v2→v1, **pushes to GitHub**, ask the user first) |
+| bonus install, up, test, destroy | `make bonus-install bonus-up bonus-roundtrip bonus-clean` |
+| everything, in order | `make check` (about 40 min; stops at the first failure and leaves that part up) |
+
+The raw scripts in the steps below are what these targets call; use whichever is easier to debug.
+
 ## Reference numbers (developer laptop, no nesting)
 
 | Step | Time | Expected test result |
