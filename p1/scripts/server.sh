@@ -3,7 +3,7 @@ set -e
 
 apt-get update
 apt-get install -y -q curl
-curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -s - \
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.37.2+k3s1" K3S_KUBECONFIG_MODE="644" sh -s - \
 	--node-ip=192.168.56.110 \
 	--tls-san=192.168.56.110 \
 	--flannel-iface=eth1

@@ -107,21 +107,21 @@ APP1_RESP=$(echo "$ROUTES" | sed -n '/---APP1---/,/---APP2---/p')
 APP2_RESP=$(echo "$ROUTES" | sed -n '/---APP2---/,/---APP3---/p')
 APP3_RESP=$(echo "$ROUTES" | sed -n '/---APP3---/,$p')
 
-if echo "$APP1_RESP" | grep -qi "app1"; then
+if echo "$APP1_RESP" | grep -q "Hello from app1"; then
     pass "Host: app1.com  → serves app1"
 else
     fail "Host: app1.com  → did not receive app1 response"
     info "Got: $(echo "$APP1_RESP" | grep -v '^---' | head -3)"
 fi
 
-if echo "$APP2_RESP" | grep -qi "app2"; then
+if echo "$APP2_RESP" | grep -q "Hello from app2"; then
     pass "Host: app2.com  → serves app2"
 else
     fail "Host: app2.com  → did not receive app2 response"
     info "Got: $(echo "$APP2_RESP" | grep -v '^---' | head -3)"
 fi
 
-if echo "$APP3_RESP" | grep -qi "app3"; then
+if echo "$APP3_RESP" | grep -q "Hello from app3"; then
     pass "Host: (other)   → serves app3 (default)"
 else
     fail "Host: (other)   → did not receive app3 response"
